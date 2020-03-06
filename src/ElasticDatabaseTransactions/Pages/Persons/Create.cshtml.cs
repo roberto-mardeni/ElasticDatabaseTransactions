@@ -44,11 +44,11 @@ namespace ElasticDatabaseTransactions
             {
                 return Page();
             }
-
+#if !NODTC
             using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
+#endif
                 decimal? id = null;
-
                 try
                 {
                     using (var conn1 = new SqlConnection(_configuration.GetConnectionString("Database1Context")))
@@ -76,10 +76,11 @@ namespace ElasticDatabaseTransactions
                         await cmd2.ExecuteNonQueryAsync();
                     }
                 }
+#if !NODTC
 
                 scope.Complete();
             }
-
+#endif
             return RedirectToPage("./Index");
         }
     }
