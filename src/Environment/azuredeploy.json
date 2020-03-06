@@ -232,5 +232,11 @@
         "reservedInstanceCount": 0
       }
     }
-  ]
+  ],
+  "outputs": {
+    "siteName": {
+      "type": "string",
+      "value": "[parameters('site_name')]"
+    }
+  }
 }
