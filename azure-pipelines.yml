@@ -28,11 +28,6 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: 'src/Environment/azuredeploy.json'
-    artifact: 'arm-templates'
-    publishLocation: 'pipeline'
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
