@@ -30,7 +30,7 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(Pipeline.Workspace)/src/Environment/azuredeploy.json'
+    targetPath: 'src/Environment/azuredeploy.json'
     artifact: 'arm-templates'
     publishLocation: 'pipeline'
 - task: PublishBuildArtifacts@1
