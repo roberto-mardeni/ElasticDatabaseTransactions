@@ -30,6 +30,11 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(Pipeline.Workspace)/src/Environment/*.json'
+    targetPath: '$(Pipeline.Workspace)/src/Environment/azuredeploy.json'
     artifact: 'arm-templates'
     publishLocation: 'pipeline'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'app'
+    publishLocation: 'Container'
