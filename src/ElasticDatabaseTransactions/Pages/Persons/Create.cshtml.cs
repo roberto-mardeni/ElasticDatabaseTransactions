@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using ElasticDatabaseTransactions.Data;
 using ElasticDatabaseTransactions.Models;
+using Microsoft.Extensions.Configuration;
+using System.Transactions;
+using System.Data.SqlClient;
 
 namespace ElasticDatabaseTransactions
 {
@@ -14,12 +13,15 @@ namespace ElasticDatabaseTransactions
     {
         private readonly ElasticDatabaseTransactions.Data.Database1Context _context1;
         private readonly ElasticDatabaseTransactions.Data.Database2Context _context2;
+        private readonly IConfiguration _configuration;
 
         public CreateModel(ElasticDatabaseTransactions.Data.Database1Context context1,
-            ElasticDatabaseTransactions.Data.Database2Context context2)
+            ElasticDatabaseTransactions.Data.Database2Context context2,
+            IConfiguration configuration)
         {
             _context1 = context1;
             _context2 = context2;
+            _configuration = configuration;
         }
 
         public IActionResult OnGet()
@@ -43,17 +45,39 @@ namespace ElasticDatabaseTransactions
                 return Page();
             }
 
-            _context1.Person.Add(Person);
-            await _context1.SaveChangesAsync();
-
-            if (!string.IsNullOrEmpty(Departments))
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
-                foreach(string department in Departments.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                decimal? id = null;
+
+                try
                 {
-                    _context2.DepartmentAssignments.Add(new DepartmentAssignment { PersonID = Person.ID, DepartmentName = department });
+                    using (var conn1 = new SqlConnection(_configuration.GetConnectionString("Database1Context")))
+                    {
+                        conn1.Open();
+                        SqlCommand cmd1 = conn1.CreateCommand();
+                        cmd1.CommandText = string.Format("INSERT INTO Person ([FirstName],[LastName]) VALUES (@FirstName, @LastName); SELECT @@IDENTITY as LastIdentityValue;");
+                        cmd1.Parameters.AddWithValue("@FirstName", Person.FirstName);
+                        cmd1.Parameters.AddWithValue("@LastName", Person.LastName);
+                        id = (decimal?)await cmd1.ExecuteScalarAsync();
+                    }
+                }
+                catch (Exception ex) { }
+
+                using (var conn2 = new SqlConnection(_configuration.GetConnectionString("Database2Context")))
+                {
+                    conn2.Open();
+
+                    foreach (string department in Departments.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var cmd2 = conn2.CreateCommand();
+                        cmd2.CommandText = string.Format("INSERT INTO DepartmentAssignments ([PersonID],[DepartmentName]) VALUES (@PersonID, @DepartmentName);");
+                        cmd2.Parameters.AddWithValue("@PersonID", id.Value);
+                        cmd2.Parameters.AddWithValue("@DepartmentName", department);
+                        await cmd2.ExecuteNonQueryAsync();
+                    }
                 }
 
-                await _context2.SaveChangesAsync();
+                scope.Complete();
             }
 
             return RedirectToPage("./Index");
