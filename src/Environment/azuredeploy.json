@@ -50,7 +50,7 @@
       }
     },
     {
-      "name": "[variables('sql_server_name_1')]/Link01",
+      "name": "[concat(variables('sql_server_name_1'), '/Link01')]",
       "type": "Microsoft.Sql/servers/communicationLinks",
       "apiVersion": "2014-04-01",
       "dependsOn": [
