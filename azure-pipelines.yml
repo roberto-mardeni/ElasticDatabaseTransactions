@@ -13,6 +13,8 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  ResourceGroup: 'dtc-demo'
+  Location: 'eastus'
 
 stages:
 - stage: Build
@@ -34,3 +36,46 @@ stages:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'app'
         publishLocation: 'Container'
+- stage: Deploy
+  jobs:
+  - job: AzureJob
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Artifacts'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'app'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    - task: AzureResourceGroupDeployment@2
+      displayName: 'Deploy Template'
+      inputs:
+        azureSubscription: 'Microsoft Azure Internal Consumption - romarden (15561d27-5df0-4f7b-9cb8-a4a771b9fd71)'
+        resourceGroupName: '$(ResourceGroup)'
+        location: '$(Location)'
+        csmFile: '$(System.ArtifactsDirectory)/app/Environment/azuredeploy.json'
+        deploymentOutputs: deploymentOutputs
+    - powershell: |
+        $deploymentOutputs=(ConvertFrom-Json '$(deploymentOutputs)')
+        $siteName=$deploymentOutputs.siteName.value
+        Write-Host "##vso[task.setvariable variable=siteName;]$siteName"
+      displayName: 'Extract Template Outputs'
+    - task: AzurePowerShell@4
+      displayName: 'Link SQL Servers'
+      inputs:
+        azureSubscription: 'Microsoft Azure Internal Consumption - romarden (15561d27-5df0-4f7b-9cb8-a4a771b9fd71)'
+        ScriptType: InlineScript
+        Inline: |
+          if ((Get-AzSqlServerCommunicationLink -ResourceGroupName $(ResourceGroup) -ServerName dtc-demo1 -LinkName Link01) -ne $null) { 
+            Write-Host "already linked" 
+          } else {
+            New-AzSqlServerCommunicationLink -ResourceGroupName $(ResourceGroup) -ServerName dtc-demo1 -LinkName Link01 -PartnerServer dtc-demo2
+          }
+        FailOnStandardError: true
+        azurePowerShellVersion: LatestVersion
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Deploy Azure App Service'
+      inputs:
+        azureSubscription: 'Microsoft Azure Internal Consumption - romarden (15561d27-5df0-4f7b-9cb8-a4a771b9fd71)'
+        WebAppName: '$(siteName)'
+        packageForLinux: '$(System.ArtifactsDirectory)/app/ElasticDatabaseTransactions.zip'
