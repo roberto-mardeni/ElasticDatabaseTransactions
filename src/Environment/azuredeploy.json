@@ -50,18 +50,6 @@
       }
     },
     {
-      "name": "[concat(variables('sql_server_name_1'), '/Link01')]",
-      "type": "Microsoft.Sql/servers/communicationLinks",
-      "apiVersion": "2014-04-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Sql/servers', variables('sql_server_name_1'))]",
-        "[resourceId('Microsoft.Sql/servers', variables('sql_server_name_2'))]"
-      ],
-      "properties": {
-        "partnerServer": "[variables('sql_server_name_2')]"
-      }
-    },
-    {
       "type": "Microsoft.Sql/servers/databases",
       "apiVersion": "2019-06-01-preview",
       "name": "[concat(variables('sql_server_name_1'), '/database1')]",
@@ -131,6 +119,18 @@
       "properties": {
         "startIpAddress": "0.0.0.0",
         "endIpAddress": "0.0.0.0"
+      }
+    },
+    {
+      "name": "[concat(variables('sql_server_name_1'), '/Link01')]",
+      "type": "Microsoft.Sql/servers/communicationLinks",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers/firewallRules', variables('sql_server_name_1'), '/AllowAllWindowsAzureIps')]",
+        "[resourceId('Microsoft.Sql/servers/firewallRules', variables('sql_server_name_2'), '/AllowAllWindowsAzureIps')]"
+      ],
+      "properties": {
+        "partnerServer": "[variables('sql_server_name_2')]"
       }
     },
     {
