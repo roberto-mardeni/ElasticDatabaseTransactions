@@ -1,20 +1,21 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Introduction
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+This repository demonstrates how to take advantage of [distributed transactions across cloud databases](https://docs.microsoft.com/en-us/azure/sql-database/sql-database-elastic-transactions-overview) in a .Net application where MSDTC is no longer available.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## Getting Started
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+Setup a pipeline in Azure DevOps using the included azure-pipelines.yml file, it is expected that an Azure Resource Manager service connection with the name 'azure' is present.
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Build and Test
+
+Running the pipeline will deploy the following resources:
+
+- Azure SQL Server (dtc-demo1)
+  - Azure SQL DB (database1)
+  - Communication Link to dtc-demo2
+- Azure SQL Server (dtc-demo2)
+  - Azure SQL DB (database2)
+- App Service Plan
+  - App Service
+
+Once deployed, proceed to the web app url and create a new person, the first name & last name are stored in **database1**, the department assignments are stored in **database2**.
