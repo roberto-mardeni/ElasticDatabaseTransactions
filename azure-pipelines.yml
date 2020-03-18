@@ -60,19 +60,6 @@ stages:
         $siteName=$deploymentOutputs.siteName.value
         Write-Host "##vso[task.setvariable variable=siteName;]$siteName"
       displayName: 'Extract Template Outputs'
-    - task: AzurePowerShell@4
-      displayName: 'Link SQL Servers'
-      inputs:
-        azureSubscription: 'Microsoft Azure Internal Consumption - romarden (15561d27-5df0-4f7b-9cb8-a4a771b9fd71)'
-        ScriptType: InlineScript
-        Inline: |
-          if ((Get-AzSqlServerCommunicationLink -ResourceGroupName '$(ResourceGroup)' -ServerName 'dtc-demo1' -LinkName 'Link01') -ne $null) { 
-            Write-Host 'already linked'
-          } else {
-            New-AzSqlServerCommunicationLink -ResourceGroupName '$(ResourceGroup)' -ServerName 'dtc-demo1' -LinkName 'Link01' -PartnerServer 'dtc-demo2'
-          }
-        FailOnStandardError: true
-        azurePowerShellVersion: LatestVersion
     - task: AzureRmWebAppDeployment@4
       displayName: 'Deploy Azure App Service'
       inputs:
