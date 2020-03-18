@@ -66,10 +66,10 @@ stages:
         azureSubscription: 'Microsoft Azure Internal Consumption - romarden (15561d27-5df0-4f7b-9cb8-a4a771b9fd71)'
         ScriptType: InlineScript
         Inline: |
-          if ((Get-AzSqlServerCommunicationLink -ResourceGroupName $(ResourceGroup) -ServerName dtc-demo1 -LinkName Link01) -ne $null) { 
-            Write-Host "already linked" 
+          if ((Get-AzSqlServerCommunicationLink -ResourceGroupName '$(ResourceGroup)' -ServerName 'dtc-demo1' -LinkName 'Link01') -ne $null) { 
+            Write-Host 'already linked'
           } else {
-            New-AzSqlServerCommunicationLink -ResourceGroupName $(ResourceGroup) -ServerName dtc-demo1 -LinkName Link01 -PartnerServer dtc-demo2
+            New-AzSqlServerCommunicationLink -ResourceGroupName '$(ResourceGroup)' -ServerName 'dtc-demo1' -LinkName 'Link01' -PartnerServer 'dtc-demo2'
           }
         FailOnStandardError: true
         azurePowerShellVersion: LatestVersion
