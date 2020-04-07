@@ -45,7 +45,7 @@ namespace ElasticDatabaseTransactions
                 return Page();
             }
 #if !NODTC
-            using (var scope = new TransactionScope())
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
 #endif
                 decimal? id = null;
@@ -53,7 +53,7 @@ namespace ElasticDatabaseTransactions
                 {
                     using (var conn1 = new SqlConnection(_configuration.GetConnectionString("Database1Context")))
                     {
-                        conn1.Open();
+                        await conn1.OpenAsync();
                         SqlCommand cmd1 = conn1.CreateCommand();
                         cmd1.CommandText = string.Format("INSERT INTO Person ([FirstName],[LastName]) VALUES (@FirstName, @LastName); SELECT @@IDENTITY as LastIdentityValue;");
                         cmd1.Parameters.AddWithValue("@FirstName", Person.FirstName);
@@ -61,19 +61,43 @@ namespace ElasticDatabaseTransactions
                         id = (decimal?)await cmd1.ExecuteScalarAsync();
                     }
                 }
-                catch (Exception ex) { }
-
-                using (var conn2 = new SqlConnection(_configuration.GetConnectionString("Database2Context")))
+                catch (Exception)
                 {
-                    conn2.Open();
+#if !NODTC
+                    scope.Dispose();
+#endif
+                    throw;
+                }
 
-                    foreach (string department in Departments.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                if (!string.IsNullOrEmpty(Departments))
+                {
+                    using (var conn2 = new SqlConnection(_configuration.GetConnectionString("Database2Context")))
                     {
-                        var cmd2 = conn2.CreateCommand();
-                        cmd2.CommandText = string.Format("INSERT INTO DepartmentAssignments ([PersonID],[DepartmentName]) VALUES (@PersonID, @DepartmentName);");
-                        cmd2.Parameters.AddWithValue("@PersonID", id.Value);
-                        cmd2.Parameters.AddWithValue("@DepartmentName", department);
-                        await cmd2.ExecuteNonQueryAsync();
+                        var departmentsList = Departments.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+                        if (departmentsList.Length > 0)
+                        {
+                            await conn2.OpenAsync();
+
+                            foreach (string department in departmentsList)
+                            {
+                                try
+                                {
+                                    var cmd2 = conn2.CreateCommand();
+                                    cmd2.CommandText = string.Format("INSERT INTO DepartmentAssignments ([PersonID],[DepartmentName]) VALUES (@PersonID, @DepartmentName);");
+                                    cmd2.Parameters.AddWithValue("@PersonID", id.Value);
+                                    cmd2.Parameters.AddWithValue("@DepartmentName", department);
+                                    await cmd2.ExecuteNonQueryAsync();
+                                }
+                                catch (Exception)
+                                {
+#if !NODTC
+                                    scope.Dispose();
+#endif
+                                    throw;
+                                }
+                            }
+                        }
                     }
                 }
 #if !NODTC
