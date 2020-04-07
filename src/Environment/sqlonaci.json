@@ -32,11 +32,11 @@
     },
     "numberCpuCores": {
       "type": "string",
-      "defaultValue": "1"
+      "defaultValue": "2"
     },
     "memory": {
       "type": "string",
-      "defaultValue": "3"
+      "defaultValue": "4"
     },
     "restartPolicy": {
       "type": "string",
@@ -57,6 +57,10 @@
         {
           "name": "SA_PASSWORD",
           "value": "[parameters('sql_server_password')]"
+        },
+        {
+          "name": "MSSQL_PID",
+          "value": "Standard"
         },
         {
           "name": "MSSQL_RPC_PORT",
@@ -215,12 +219,12 @@
           "connectionStrings": [
             {
               "name": "Database1Context",
-              "connectionString": "[concat('Server=tcp:',variables('container1Name'),'.',resourceGroup().location,'.azurecontainer.io,1433;Initial Catalog=database1;Persist Security Info=False;User ID=sa;Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+              "connectionString": "[concat('Server=tcp:',variables('container1Name'),'.',resourceGroup().location,'.azurecontainer.io,1433;Initial Catalog=database1;Persist Security Info=False;User ID=sa;Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;')]",
               "type": "SQLAzure"
             },
             {
               "name": "Database2Context",
-              "connectionString": "[concat('Server=tcp:',variables('container2Name'),'.',resourceGroup().location,'.azurecontainer.io,1433;Initial Catalog=database2;Persist Security Info=False;User ID=sa;Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+              "connectionString": "[concat('Server=tcp:',variables('container2Name'),'.',resourceGroup().location,'.azurecontainer.io,1433;Initial Catalog=database2;Persist Security Info=False;User ID=sa;Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;')]",
               "type": "SQLAzure"
             }
           ]
