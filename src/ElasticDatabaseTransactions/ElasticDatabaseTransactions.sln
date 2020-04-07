@@ -17,26 +17,26 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		DebugWithDTC|Any CPU = DebugWithDTC|Any CPU
-		Release|Any CPU = Release|Any CPU
 		ReleaseForAzureSQLDB|Any CPU = ReleaseForAzureSQLDB|Any CPU
+		ReleaseForSQLonACI|Any CPU = ReleaseForSQLonACI|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.DebugWithDTC|Any CPU.ActiveCfg = DebugWithDTC|Any CPU
 		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.DebugWithDTC|Any CPU.Build.0 = DebugWithDTC|Any CPU
-		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.ReleaseForAzureSQLDB|Any CPU.ActiveCfg = ReleaseForAzureSQLDB|Any CPU
 		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.ReleaseForAzureSQLDB|Any CPU.Build.0 = ReleaseForAzureSQLDB|Any CPU
+		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.ReleaseForSQLonACI|Any CPU.ActiveCfg = Release|Any CPU
+		{4B7FD54E-9FDA-4586-AFF3-6F211A5DCA97}.ReleaseForSQLonACI|Any CPU.Build.0 = Release|Any CPU
 		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.DebugWithDTC|Any CPU.ActiveCfg = DebugWithDTC|Any CPU
 		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.DebugWithDTC|Any CPU.Build.0 = DebugWithDTC|Any CPU
-		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.ReleaseForAzureSQLDB|Any CPU.ActiveCfg = ReleaseForAzureSQLDB|Any CPU
 		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.ReleaseForAzureSQLDB|Any CPU.Build.0 = ReleaseForAzureSQLDB|Any CPU
+		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.ReleaseForSQLonACI|Any CPU.ActiveCfg = Release|Any CPU
+		{44FD5E61-F08A-4FE8-B933-854C03C1102B}.ReleaseForSQLonACI|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
