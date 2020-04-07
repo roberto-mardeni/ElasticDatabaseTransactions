@@ -45,7 +45,7 @@ namespace ElasticDatabaseTransactions
                 return Page();
             }
 #if !NODTC
-            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            using (var scope = new TransactionScope())
             {
 #endif
                 decimal? id = null;
