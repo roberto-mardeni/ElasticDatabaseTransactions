@@ -9,6 +9,10 @@
       <Configuration>Debug</Configuration>
       <Platform>AnyCPU</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseForAzureSQLDB|AnyCPU">
+      <Configuration>ReleaseForAzureSQLDB</Configuration>
+      <Platform>AnyCPU</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|AnyCPU">
       <Configuration>Release</Configuration>
       <Platform>AnyCPU</Platform>
