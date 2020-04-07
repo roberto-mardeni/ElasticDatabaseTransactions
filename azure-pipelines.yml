@@ -26,43 +26,52 @@ stages:
       inputs:
         restoreSolution: '$(solution)'
     - task: VSBuild@1
+      displayName: 'Build for Release'
       inputs:
         solution: '$(solution)'
         msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
         platform: '$(buildPlatform)'
-        configuration: '$(buildConfiguration)'
+        configuration: 'Release'
+    - task: VSBuild@1
+      displayName: 'Build for ReleaseForAzureSQLDB'
+      inputs:
+        solution: '$(solution)'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+        platform: '$(buildPlatform)'
+        configuration: 'ReleaseForAzureSQLDB'
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'app'
         publishLocation: 'Container'
-- stage: Deploy
-  jobs:
-  - job: AzureJob
-    steps:
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Download Artifacts'
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'app'
-        downloadPath: '$(System.ArtifactsDirectory)'
-    - task: AzureResourceGroupDeployment@2
-      displayName: 'Deploy Template'
-      inputs:
-        azureSubscription: 'azure'
-        resourceGroupName: '$(ResourceGroup)'
-        location: '$(Location)'
-        csmFile: '$(System.ArtifactsDirectory)/app/Environment/azuredeploy.json'
-        deploymentOutputs: deploymentOutputs
-    - powershell: |
-        $deploymentOutputs=(ConvertFrom-Json '$(deploymentOutputs)')
-        $siteName=$deploymentOutputs.siteName.value
-        Write-Host "##vso[task.setvariable variable=siteName;]$siteName"
-      displayName: 'Extract Template Outputs'
-    - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploy Azure App Service'
-      inputs:
-        azureSubscription: 'azure'
-        WebAppName: '$(siteName)'
-        packageForLinux: '$(System.ArtifactsDirectory)/app/ElasticDatabaseTransactions.zip'
+
+# - stage: Deploy
+#   jobs:
+#   - job: AzureJob
+#     steps:
+#     - task: DownloadBuildArtifacts@0
+#       displayName: 'Download Artifacts'
+#       inputs:
+#         buildType: 'current'
+#         downloadType: 'single'
+#         artifactName: 'app'
+#         downloadPath: '$(System.ArtifactsDirectory)'
+#     - task: AzureResourceGroupDeployment@2
+#       displayName: 'Deploy Template'
+#       inputs:
+#         azureSubscription: 'azure'
+#         resourceGroupName: '$(ResourceGroup)'
+#         location: '$(Location)'
+#         csmFile: '$(System.ArtifactsDirectory)/app/Environment/azuredeploy.json'
+#         deploymentOutputs: deploymentOutputs
+#     - powershell: |
+#         $deploymentOutputs=(ConvertFrom-Json '$(deploymentOutputs)')
+#         $siteName=$deploymentOutputs.siteName.value
+#         Write-Host "##vso[task.setvariable variable=siteName;]$siteName"
+#       displayName: 'Extract Template Outputs'
+#     - task: AzureRmWebAppDeployment@4
+#       displayName: 'Deploy Azure App Service'
+#       inputs:
+#         azureSubscription: 'azure'
+#         WebAppName: '$(siteName)'
+#         packageForLinux: '$(System.ArtifactsDirectory)/app/ElasticDatabaseTransactions.zip'
