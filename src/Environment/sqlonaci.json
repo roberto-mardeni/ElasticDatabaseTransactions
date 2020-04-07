@@ -1,0 +1,310 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "containerNamePrefix": {
+      "type": "string",
+      "defaultValue": "sqlonaci"
+    },
+    "sql_server_password": {
+      "defaultValue": "Password$123",
+      "type": "securestring"
+    },
+    "imageType": {
+      "type": "string",
+      "allowedValues": [
+        "Public",
+        "Private"
+      ],
+      "defaultValue": "Public"
+    },
+    "imageName": {
+      "type": "string",
+      "defaultValue": "mcr.microsoft.com/mssql/server:2019-latest"
+    },
+    "osType": {
+      "type": "string",
+      "allowedValues": [
+        "Linux",
+        "Windows"
+      ],
+      "defaultValue": "Linux"
+    },
+    "numberCpuCores": {
+      "type": "string",
+      "defaultValue": "1"
+    },
+    "memory": {
+      "type": "string",
+      "defaultValue": "3"
+    },
+    "restartPolicy": {
+      "type": "string",
+      "allowedValues": [
+        "OnFailure",
+        "Always",
+        "Never"
+      ],
+      "defaultValue": "OnFailure"
+    },
+    "environmentVariables": {
+      "type": "array",
+      "defaultValue": [
+        {
+          "name": "ACCEPT_EULA",
+          "value": "Y"
+        },
+        {
+          "name": "SA_PASSWORD",
+          "value": "[parameters('sql_server_password')]"
+        },
+        {
+          "name": "MSSQL_RPC_PORT",
+          "value": "135"
+        },
+        {
+          "name": "MSSQL_DTC_TCP_PORT",
+          "value": "51000"
+        }
+      ]
+    },
+    "ipAddressType": {
+      "type": "string",
+      "defaultValue": "Public"
+    },
+    "ports": {
+      "type": "array",
+      "defaultValue": [
+        {
+          "port": "1433",
+          "protocol": "TCP"
+        },
+        {
+          "port": "51000",
+          "protocol": "TCP"
+        },
+        {
+          "port": "135",
+          "protocol": "TCP"
+        }
+      ]
+    },
+    "site_name": {
+      "defaultValue": "[concat('ElasticDatabaseTransactionsOnACI', utcnow('yyyyMMdd'))]",
+      "type": "string"
+    }
+  },
+  "variables": {
+    "container1Name": "[concat(parameters('containerNamePrefix'), '1')]",
+    "container2Name": "[concat(parameters('containerNamePrefix'), '2')]",
+    "app_service_plan_name": "[concat(parameters('site_name'), '_farm')]"
+  },
+  "resources": [
+    {
+      "location": "[resourceGroup().location]",
+      "name": "[variables('container1Name')]",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2018-10-01",
+      "properties": {
+        "containers": [
+          {
+            "name": "[variables('container1Name')]",
+            "properties": {
+              "image": "[parameters('imageName')]",
+              "resources": {
+                "requests": {
+                  "cpu": "[int(parameters('numberCpuCores'))]",
+                  "memoryInGB": "[float(parameters('memory'))]"
+                }
+              },
+              "environmentVariables": "[parameters('environmentVariables')]",
+              "ports": "[parameters('ports')]"
+            }
+          }
+        ],
+        "restartPolicy": "[parameters('restartPolicy')]",
+        "osType": "[parameters('osType')]",
+        "ipAddress": {
+          "type": "[parameters('ipAddressType')]",
+          "ports": "[parameters('ports')]",
+          "dnsNameLabel": "[variables('container1Name')]"
+        }
+      },
+      "tags": {}
+    },
+    {
+      "location": "[resourceGroup().location]",
+      "name": "[variables('container2Name')]",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2018-10-01",
+      "properties": {
+        "containers": [
+          {
+            "name": "[variables('container2Name')]",
+            "properties": {
+              "image": "[parameters('imageName')]",
+              "resources": {
+                "requests": {
+                  "cpu": "[int(parameters('numberCpuCores'))]",
+                  "memoryInGB": "[float(parameters('memory'))]"
+                }
+              },
+              "environmentVariables": "[parameters('environmentVariables')]",
+              "ports": "[parameters('ports')]"
+            }
+          }
+        ],
+        "restartPolicy": "[parameters('restartPolicy')]",
+        "osType": "[parameters('osType')]",
+        "ipAddress": {
+          "type": "[parameters('ipAddressType')]",
+          "ports": "[parameters('ports')]",
+          "dnsNameLabel": "[variables('container2Name')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2018-02-01",
+      "name": "[variables('app_service_plan_name')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "S1",
+        "tier": "Standard",
+        "size": "S1",
+        "family": "S",
+        "capacity": 1
+      },
+      "kind": "app",
+      "properties": {
+        "perSiteScaling": false,
+        "maximumElasticWorkerCount": 1,
+        "isSpot": false,
+        "reserved": false,
+        "isXenon": false,
+        "hyperV": false,
+        "targetWorkerCount": 0,
+        "targetWorkerSizeId": 0
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2018-11-01",
+      "name": "[parameters('site_name')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('app_service_plan_name'))]"
+      ],
+      "tags": {},
+      "kind": "app",
+      "properties": {
+        "enabled": true,
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('app_service_plan_name'))]",
+        "reserved": false,
+        "isXenon": false,
+        "hyperV": false,
+        "scmSiteAlsoStopped": false,
+        "clientAffinityEnabled": true,
+        "clientCertEnabled": false,
+        "hostNamesDisabled": false,
+        "containerSize": 0,
+        "dailyMemoryTimeQuota": 0,
+        "httpsOnly": true,
+        "redundancyMode": "None",
+        "siteConfig": {
+          "connectionStrings": [
+            {
+              "name": "Database1Context",
+              "connectionString": "[concat('Server=tcp:',variables('container1Name'),'.',resourceGroup().location,'.azurecontainer.io,1433;Initial Catalog=database1;Persist Security Info=False;User ID=sa;Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+              "type": "SQLAzure"
+            },
+            {
+              "name": "Database2Context",
+              "connectionString": "[concat('Server=tcp:',variables('container2Name'),'.',resourceGroup().location,'.azurecontainer.io,1433;Initial Catalog=database2;Persist Security Info=False;User ID=sa;Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+              "type": "SQLAzure"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2018-11-01",
+      "name": "[concat(parameters('site_name'), '/web')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('site_name'))]"
+      ],
+      "tags": {},
+      "properties": {
+        "numberOfWorkers": 1,
+        "defaultDocuments": [
+          "Default.htm",
+          "Default.html",
+          "Default.asp",
+          "index.htm",
+          "index.html",
+          "iisstart.htm",
+          "default.aspx",
+          "index.php",
+          "hostingstart.html"
+        ],
+        "netFrameworkVersion": "v4.0",
+        "phpVersion": "5.6",
+        "requestTracingEnabled": false,
+        "remoteDebuggingEnabled": false,
+        "remoteDebuggingVersion": "VS2019",
+        "httpLoggingEnabled": false,
+        "logsDirectorySizeLimit": 35,
+        "detailedErrorLoggingEnabled": false,
+        "scmType": "None",
+        "use32BitWorkerProcess": true,
+        "webSocketsEnabled": false,
+        "alwaysOn": false,
+        "managedPipelineMode": "Integrated",
+        "virtualApplications": [
+          {
+            "virtualPath": "/",
+            "physicalPath": "site\\wwwroot",
+            "preloadEnabled": false
+          }
+        ],
+        "loadBalancing": "LeastRequests",
+        "experiments": {
+          "rampUpRules": []
+        },
+        "autoHealEnabled": false,
+        "localMySqlEnabled": false,
+        "ipSecurityRestrictions": [
+          {
+            "ipAddress": "Any",
+            "action": "Allow",
+            "priority": 1,
+            "name": "Allow all",
+            "description": "Allow all access"
+          }
+        ],
+        "scmIpSecurityRestrictions": [
+          {
+            "ipAddress": "Any",
+            "action": "Allow",
+            "priority": 1,
+            "name": "Allow all",
+            "description": "Allow all access"
+          }
+        ],
+        "scmIpSecurityRestrictionsUseMain": false,
+        "http20Enabled": false,
+        "minTlsVersion": "1.2",
+        "ftpsState": "AllAllowed",
+        "reservedInstanceCount": 0
+      }
+    }
+  ],
+  "outputs": {
+    "siteName": {
+      "type": "string",
+      "value": "[parameters('site_name')]"
+    }
+  }
+}
