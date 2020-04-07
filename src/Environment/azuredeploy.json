@@ -20,13 +20,27 @@
     }
   },
   "variables": {
-    "app_service_plan_name":  "[concat(parameters('site_name'), '_farm')]"
+    "app_service_plan_name":  "[concat(parameters('site_name'), '_farm')]",
+    "sql_server_name_1": "[concat(parameters('sql_server_name'), '1')]",
+    "sql_server_name_2": "[concat(parameters('sql_server_name'), '2')]"
   },
   "resources": [
     {
       "type": "Microsoft.Sql/servers",
       "apiVersion": "2019-06-01-preview",
-      "name": "[parameters('sql_server_name')]",
+      "name": "[variables('sql_server_name_1')]",
+      "location": "[resourceGroup().location]",
+      "kind": "v12.0",
+      "properties": {
+        "administratorLogin": "[parameters('sql_server_login')]",
+        "administratorLoginPassword": "[parameters('sql_server_password')]",
+        "version": "12.0"
+      }
+    },
+    {
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2019-06-01-preview",
+      "name": "[variables('sql_server_name_2')]",
       "location": "[resourceGroup().location]",
       "kind": "v12.0",
       "properties": {
@@ -38,10 +52,10 @@
     {
       "type": "Microsoft.Sql/servers/databases",
       "apiVersion": "2019-06-01-preview",
-      "name": "[concat(parameters('sql_server_name'), '/database1')]",
+      "name": "[concat(variables('sql_server_name_1'), '/database1')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Sql/servers', parameters('sql_server_name'))]"
+        "[resourceId('Microsoft.Sql/servers', variables('sql_server_name_1'))]"
       ],
       "sku": {
         "name": "Basic",
@@ -62,10 +76,10 @@
     {
       "type": "Microsoft.Sql/servers/databases",
       "apiVersion": "2019-06-01-preview",
-      "name": "[concat(parameters('sql_server_name'), '/database2')]",
+      "name": "[concat(variables('sql_server_name_2'), '/database2')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Sql/servers', parameters('sql_server_name'))]"
+        "[resourceId('Microsoft.Sql/servers', variables('sql_server_name_2'))]"
       ],
       "sku": {
         "name": "Basic",
@@ -86,13 +100,37 @@
     {
       "type": "Microsoft.Sql/servers/firewallRules",
       "apiVersion": "2015-05-01-preview",
-      "name": "[concat(parameters('sql_server_name'), '/AllowAllWindowsAzureIps')]",
+      "name": "[concat(variables('sql_server_name_1'), '/AllowAllWindowsAzureIps')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Sql/servers', parameters('sql_server_name'))]"
+        "[resourceId('Microsoft.Sql/servers', variables('sql_server_name_1'))]"
       ],
       "properties": {
         "startIpAddress": "0.0.0.0",
         "endIpAddress": "0.0.0.0"
+      }
+    },
+    {
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "2015-05-01-preview",
+      "name": "[concat(variables('sql_server_name_2'), '/AllowAllWindowsAzureIps')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', variables('sql_server_name_2'))]"
+      ],
+      "properties": {
+        "startIpAddress": "0.0.0.0",
+        "endIpAddress": "0.0.0.0"
+      }
+    },
+    {
+      "name": "[concat(variables('sql_server_name_1'), '/Link01')]",
+      "type": "Microsoft.Sql/servers/communicationLinks",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers/firewallRules', variables('sql_server_name_1'), 'AllowAllWindowsAzureIps')]",
+        "[resourceId('Microsoft.Sql/servers/firewallRules', variables('sql_server_name_2'), 'AllowAllWindowsAzureIps')]"
+      ],
+      "properties": {
+        "partnerServer": "[variables('sql_server_name_2')]"
       }
     },
     {
@@ -147,12 +185,12 @@
           "connectionStrings": [
             {
               "name": "Database1Context",
-              "connectionString": "[concat('Server=tcp:',parameters('sql_server_name'),'.database.windows.net,1433;Initial Catalog=database1;Persist Security Info=False;User ID=',parameters('sql_server_login'),';Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+              "connectionString": "[concat('Server=tcp:',variables('sql_server_name_1'),'.database.windows.net,1433;Initial Catalog=database1;Persist Security Info=False;User ID=',parameters('sql_server_login'),';Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
               "type": "SQLAzure"
             },
             {
               "name": "Database2Context",
-              "connectionString": "[concat('Server=tcp:',parameters('sql_server_name'),'.database.windows.net,1433;Initial Catalog=database2;Persist Security Info=False;User ID=',parameters('sql_server_login'),';Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+              "connectionString": "[concat('Server=tcp:',variables('sql_server_name_2'),'.database.windows.net,1433;Initial Catalog=database2;Persist Security Info=False;User ID=',parameters('sql_server_login'),';Password=',parameters('sql_server_password'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
               "type": "SQLAzure"
             }
           ]
@@ -232,5 +270,11 @@
         "reservedInstanceCount": 0
       }
     }
-  ]
+  ],
+  "outputs": {
+    "siteName": {
+      "type": "string",
+      "value": "[parameters('site_name')]"
+    }
+  }
 }
